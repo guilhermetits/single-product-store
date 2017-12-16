@@ -5,6 +5,8 @@ using SingleProductStore.Entity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Threading.Tasks;
 
 namespace SingleProductStore.Data.Sql.Repository
 {
@@ -53,32 +55,37 @@ namespace SingleProductStore.Data.Sql.Repository
 
         #region .::Read Actions::.
 
-        public T Find(params object[] keyValues)
+        public async Task<T> Find(params object[] keyValues)
         {
-
-            return this.Entities?.Find(keyValues);
+            return await this.Entities?.FindAsync(keyValues);
         }
 
-        public IEnumerable<T> Get()
+        public async Task<IEnumerable<T>> Get()
         {
-            return this.Entities;
+            return await this.Entities.ToListAsync();
         }
-
-        public IEnumerable<T> Where(System.Linq.Expressions.Expression<Func<T, bool>> filterExpression)
+         
+        public async Task<IEnumerable<T>> Where(Expression<Func<T, bool>> filterExpression)
         {
             return this.Entities?.Where(filterExpression);
         }
 
-        public T SingleOrDefault(System.Linq.Expressions.Expression<Func<T, bool>> filterExpression)
+        public async Task<T> SingleOrDefault(System.Linq.Expressions.Expression<Func<T, bool>> filterExpression)
         {
-            return this.Entities?.SingleOrDefault(filterExpression);
+            return await this.Entities?.SingleOrDefaultAsync(filterExpression);
+        }
+
+
+        public async Task<bool> ExistsAsync(Expression<Func<T, bool>> filterExpression)
+        {
+            return await this.Entities?.AnyAsync(filterExpression);
         }
 
         #endregion
 
         #region .::Write Actions::.
 
-        public void Insert(T entity)
+        public async Task Insert(T entity)
         {
             entity.CreatedAt = DateTime.UtcNow;
             entity.UpdatedAt = null;
@@ -89,7 +96,7 @@ namespace SingleProductStore.Data.Sql.Repository
             {
                 try
                 {
-                    db.SaveChanges();
+                    await db.SaveChangesAsync();
 
                 }
                 catch (Exception ex)
@@ -100,7 +107,7 @@ namespace SingleProductStore.Data.Sql.Repository
             }
         }
 
-        public void InsertRange(IEnumerable<T> entities, int? batchSize = null)
+        public async Task InsertRange(IEnumerable<T> entities, int? batchSize = null)
         {
             if (entities == null)
             {
@@ -114,7 +121,7 @@ namespace SingleProductStore.Data.Sql.Repository
                     this.Entities.AddRange(entities);
                     if (this.AutoCommitEnabled)
                     {
-                        this.Context.SaveChanges();
+                        await this.Context.SaveChangesAsync();
                     }
                 }
                 else
@@ -123,13 +130,19 @@ namespace SingleProductStore.Data.Sql.Repository
                     bool saved = false;
                     foreach (var entity in entities)
                     {
-                        this.Insert(entity);
+                        await this.Insert(entity);
                         saved = false;
                         if (i % batchSize.Value == 0)
                         {
+                            Task task = null;
+                            if (task != null)
+                            {
+                                task.Wait();
+                                task = null;
+                            }
                             if (this.AutoCommitEnabled)
                             {
-                                Context.SaveChanges();
+                                task = Context.SaveChangesAsync();
                             }
                             i = 0;
                             saved = true;
@@ -141,25 +154,25 @@ namespace SingleProductStore.Data.Sql.Repository
                     {
                         if (this.AutoCommitEnabled)
                         {
-                            this.Context.SaveChanges();
+                            await this.Context.SaveChangesAsync();
                         }
                     }
                 }
             }
         }
 
-        public void Update(T entity)
+        public async Task Update(T entity)
         {
             db.Entry(entity).State = EntityState.Modified;
             db.Entry(entity).Property(t => t.CreatedAt).IsModified = false;
             db.Entry(entity).Property(t => t.UpdatedAt).CurrentValue = DateTime.UtcNow;
             if (this.AutoCommitEnabled)
             {
-                this.Context.SaveChanges();
+                await this.Context.SaveChangesAsync();
             }
         }
 
-        public void Delete(T entity)
+        public async Task Delete(T entity)
         {
             if (db.Entry(entity).State == EntityState.Detached)
             {
@@ -169,7 +182,7 @@ namespace SingleProductStore.Data.Sql.Repository
 
             if (this.AutoCommitEnabled)
             {
-                this.Context.SaveChanges();
+                await this.Context.SaveChangesAsync();
             }
 
         }
@@ -196,9 +209,9 @@ namespace SingleProductStore.Data.Sql.Repository
             this.db = context;
         }
 
-        public void Commit()
+        public async Task<int> Commit()
         {
-            this.Context.SaveChanges();
+            return await this.Context.SaveChangesAsync();
         }
 
         #endregion

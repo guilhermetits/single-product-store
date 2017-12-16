@@ -1,33 +1,32 @@
-﻿using System;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Mvc;
+using SingleProductStore.Business.Contract.Service;
+using SingleProductStore.Web.Models;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using SingleProductStore.Models;
 
 namespace SingleProductStore.Controllers
 {
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        private IPromotionService promotionService;
+
+
+        public HomeController(IPromotionService promotionService)
         {
-            return View();
+            this.promotionService = promotionService;
         }
 
-        public IActionResult About()
+        public async Task<IActionResult> Index()
         {
-            ViewData["Message"] = "Your application description page.";
-
-            return View();
+            var promotions = await promotionService.GetAsync();
+            promotions.Take(3);
+            var promotionsViewModel = Mapper.Map<List<PromotionViewModel>>(promotions.ToList());
+            return View(promotionsViewModel);
         }
-
-        public IActionResult Contact()
-        {
-            ViewData["Message"] = "Your contact page.";
-
-            return View();
-        }
+        
 
         public IActionResult Error()
         {

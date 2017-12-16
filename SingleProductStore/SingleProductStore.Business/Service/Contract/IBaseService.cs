@@ -1,39 +1,54 @@
-﻿using SingleProductStore.Data.Sql.Context;
+﻿using SingleProductStore.Data.Sql.Repository.Contract;
 using SingleProductStore.Entity;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 
-namespace SingleProductStore.Data.Sql.Repository.Contract
+namespace SingleProductStore.Business.Contract.Service
 {
-    public interface IRepository<TEntity> : IDisposable where TEntity : BaseEntity
+    public interface IBaseService<TEntity> : IDisposable where TEntity : BaseEntity
     {
-        #region .::Properties::.
-        IDbContext Context { get; }
-        bool AutoCommitEnabled { get; set; }
-        #endregion
+        IRepository<TEntity> Repository { get; }
+        bool AutoSaveEnabled { get; set; }
 
-        #region .::Read Actions::.
+        #region .::Read Options::.
         /// <summary>
         /// 
         /// </summary>
         /// <param name="keyValues"></param>
         /// <returns></returns>
-        Task<TEntity> Find(params object[] keyValues);
+        Task<TEntity> FindAsync(params object[] keyValues);
 
         /// <summary>
         /// Gel all Entitys of the type
         /// </summary>
         /// <returns>IEnumerable of TEntity</returns>
-        Task<IEnumerable<TEntity>> Get();
+        Task<IEnumerable<TEntity>> GetAsync();
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="filterExpression"></param>
         /// <returns></returns>
-        Task<IEnumerable<TEntity>> Where(Expression<Func<TEntity, bool>> filterExpression);
+        Task<IEnumerable<TEntity>> WhereAsync(Expression<Func<TEntity, bool>> filterExpression);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filterExpression"></param>
+        /// <param name="defaultValue"></param>
+        /// <returns></returns>
+        Task<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> filterExpression,
+            TEntity defaultValue);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="filterExpression"></param>
+        /// <param name="defaultValue"></param>
+        /// <returns></returns>
+        Task<TEntity> SingleOrDefaultAsync(Expression<Func<TEntity, bool>> filterExpression);
 
         /// <summary>
         /// 
@@ -41,13 +56,6 @@ namespace SingleProductStore.Data.Sql.Repository.Contract
         /// <param name="filterExpression"></param>
         /// <returns></returns>
         Task<bool> ExistsAsync(Expression<Func<TEntity, bool>> filterExpression);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="filterExpression"></param>
-        /// <returns></returns>
-        Task<TEntity> SingleOrDefault(Expression<Func<TEntity, bool>> filterExpression);
         #endregion
 
         #region .::Write Actions::.
@@ -56,30 +64,26 @@ namespace SingleProductStore.Data.Sql.Repository.Contract
         /// 
         /// </summary>
         /// <param name="entity"></param>
-        Task Insert(TEntity entity);
+        Task InsertAsync(TEntity entity);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="entities"></param>
-        Task InsertRange(IEnumerable<TEntity> entities, int? batchSize);
+        Task InsertRangeAsync(IEnumerable<TEntity> entities);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="entity"></param>
-        Task Update(TEntity entity);
+        Task UpdateAsync(TEntity entity);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="entity"></param>
-        Task Delete(TEntity entity);
+        Task DeleteAsync(TEntity entity);
         #endregion
 
-        #region .::Helpers::.
-        Task<int> Commit();
-
-        #endregion
     }
 }

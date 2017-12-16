@@ -1,6 +1,4 @@
-using System;
-
-namespace SingleProductStore.Models
+namespace SingleProductStore.Web.Models
 {
     public class ErrorViewModel
     {
