@@ -23,24 +23,8 @@ namespace SingleProductStore.Data.Sql.Repository
         #region .::Properties::.
 
         public bool AutoCommitEnabled { get; set; }
-        public IDbContext Context
-        {
-            get
-            {
-                return db;
-            }
-        }
-        protected DbSet<T> Entities
-        {
-            get
-            {
-                if (entitySet == null)
-                {
-                    entitySet = db.Set<T>();
-                }
-                return entitySet as DbSet<T>;
-            }
-        }
+        public IDbContext Context => db;
+        protected DbSet<T> Entities => entitySet = entitySet ?? db.Set<T>();
         #endregion
 
         #region .::Ctor::.
@@ -74,7 +58,6 @@ namespace SingleProductStore.Data.Sql.Repository
         {
             return await this.Entities?.SingleOrDefaultAsync(filterExpression);
         }
-
 
         public async Task<bool> ExistsAsync(Expression<Func<T, bool>> filterExpression)
         {
